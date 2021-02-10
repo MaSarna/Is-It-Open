@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "177995282972",
+    "project_id": "is-it-open-93bdb",
+    "storage_bucket": "is-it-open-93bdb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177995282972:android:eec834f0685cfe68b07dd9",
+        "android_client_info": {
+          "package_name": "com.example.isitopen"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "177995282972-9k0c9lpcj4s5nd0ao308s2meslc8sfu1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxary4DkczAXSCS6YyXhCDbTJ3WDvJgk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "177995282972-9k0c9lpcj4s5nd0ao308s2meslc8sfu1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
