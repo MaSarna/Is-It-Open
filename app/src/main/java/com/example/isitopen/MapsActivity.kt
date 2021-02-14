@@ -1,19 +1,14 @@
 package com.example.isitopen
 
-import android.Manifest
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Transformations.map
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -50,21 +45,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-
-//        val firebase = FirebaseDatabase.getInstance()
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.uiSettings.isZoomControlsEnabled = true
 
         db.collection("locations")
                 .addSnapshotListener { result, e ->
@@ -72,6 +58,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         Log.w(TAG, "Listen failed.", e)
                         return@addSnapshotListener
                     }
+                    mMap.clear()
                     arrayLocations.clear()
                     arrayLocations.addAll(result!!.toObjects(Locations::class.java))
 
@@ -81,43 +68,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     }
                 }
-
-//        val cracow = LatLng(50.049683, 19.944544)
-//        val orakon = LatLng(50.050016100617974, 19.948198217562414)
-//        val bracciate = LatLng(50.0463736471702, 19.927057470089814)
-//        val koko = LatLng(50.060368468313975, 19.935269104510997)
-//        val wordsSwords = LatLng(50.06629854291088, 19.935270875823303)
-//        val korba = LatLng(50.06679406701404, 19.942679945416995)
-//        val zdrowaKrowa = LatLng(50.070947541813275, 19.94422125739153)
-//        val wagonRodzinnie = LatLng(50.08678721630554, 19.904372923464567)
-//        val carlBart = LatLng(50.09701338086927, 19.965920750449143)
-//        val wesoleGary = LatLng(50.08608198353258, 20.01476362302043)
-//        val barZoltoNiebiesko = LatLng(50.07895333907443, 20.028701819405843)
-//        val krakowskaSpizarnia = LatLng(49.98410516046104, 19.89231654328277)
-//        val tesone = LatLng(50.0191878329213, 19.90682026644413)
-//        val czarnaOwca = LatLng(50.05067082723072, 19.949687230750687)
-//        val knitted = LatLng(50.049119887345164, 19.959561823825783)
-//        val boka = LatLng(50.05026184306268, 19.959500574047553)
-//        val talerz = LatLng(50.050343700697184, 19.959442914383942)
-
-        mMap.uiSettings.isZoomControlsEnabled = true
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cracow, 12.0f))
-//        mMap.addMarker(MarkerOptions().position(orakon).title("Orakon - Studio W19"))
-//        mMap.addMarker(MarkerOptions().position(bracciate).title("A'Bracciate Pasta & Wine"))
-//        mMap.addMarker(MarkerOptions().position(koko).title("Gospoda Koko"))
-//        mMap.addMarker(MarkerOptions().position(wordsSwords).title("Hotel Words & Swords"))
-//        mMap.addMarker(MarkerOptions().position(korba).title("KORBA Piwo Kawiarnia"))
-//        mMap.addMarker(MarkerOptions().position(zdrowaKrowa).title("Zdrowa Krowa Kraków"))
-//        mMap.addMarker(MarkerOptions().position(wagonRodzinnie).title("Małopolski Wagon Rodzinnie - mięso & pizza"))
-//        mMap.addMarker(MarkerOptions().position(carlBart).title("Restauracja włoska Carl & Bart"))
-//        mMap.addMarker(MarkerOptions().position(wesoleGary).title("Wesołe Gary"))
-//        mMap.addMarker(MarkerOptions().position(barZoltoNiebiesko).title("Bary Na Żółto i Na Niebiesko"))
-//        mMap.addMarker(MarkerOptions().position(krakowskaSpizarnia).title("NOWA Krakowska Spiżarnia"))
-//        mMap.addMarker(MarkerOptions().position(tesone).title("Restauracja Tesone"))
-//        mMap.addMarker(MarkerOptions().position(czarnaOwca).title("Czarna Owca Wino Bar"))
-//        mMap.addMarker(MarkerOptions().position(knitted).title("KNITTED Coffee"))
-//        mMap.addMarker(MarkerOptions().position(boka).title("Boka coffee bar"))
-//        mMap.addMarker(MarkerOptions().position(talerz).title("Talerz Polish Restaurant"))
 
         setUpMap()
 
