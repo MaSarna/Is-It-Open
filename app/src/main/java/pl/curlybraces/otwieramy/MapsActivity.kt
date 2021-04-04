@@ -1,4 +1,4 @@
-package com.example.isitopen
+package pl.curlybraces.otwieramy
 
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -13,10 +13,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -26,9 +25,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-    val TAG = "MapsActivity"
-    var db = FirebaseFirestore.getInstance()
-    var arrayLocations = arrayListOf<Locations>()
+    private val TAG = "MapsActivity"
+    private var db = FirebaseFirestore.getInstance()
+    private var arrayLocations = arrayListOf<Locations>()
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -40,7 +39,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         setContentView(R.layout.activity_maps)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
+            .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -53,31 +52,41 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap.uiSettings.isZoomControlsEnabled = true
 
         db.collection("locations")
-                .addSnapshotListener { result, e ->
-                    if (e != null) {
-                        Log.w(TAG, "Listen failed.", e)
-                        return@addSnapshotListener
-                    }
-                    mMap.clear()
-                    arrayLocations.clear()
-                    arrayLocations.addAll(result!!.toObjects(Locations::class.java))
-
-                    for (place in arrayLocations) {
-                        val geoPosition = LatLng(place.latitude, place.longitude)
-                        mMap.addMarker(MarkerOptions().position(geoPosition).title(place.name))
-
-                    }
+            .addSnapshotListener { result, e ->
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e)
+                    return@addSnapshotListener
                 }
+                mMap.clear()
+                arrayLocations.clear()
+                arrayLocations.addAll(result!!.toObjects(Locations::class.java))
+
+                for (place in arrayLocations) {
+                    val geoPosition = LatLng(place.latitude, place.longitude)
+                    mMap.addMarker(
+                        MarkerOptions()
+                            .position(geoPosition)
+                            .title(place.name)
+                            .snippet(openingTimes(place))
+                            .icon(checkIfOpen(place))
+                    )
+                }
+            }
 
         setUpMap()
-
     }
 
     private fun setUpMap() {
-        if (ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
             return
         }
         //draws blue dot on the map (based on location of device)
@@ -98,14 +107,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     //Check for location permission; if it is granted then request for location updates.
     private fun startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    LOCATION_PERMISSION_REQUEST_CODE)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
             return
         }
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null /* Looper */)
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            null /* Looper */
+        )
     }
 
     private fun createLocationRequest() {
@@ -115,7 +133,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest)
+            .addLocationRequest(locationRequest)
 
         val client = LocationServices.getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
@@ -131,12 +149,46 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 try {
                     // Show the dialog by calling startResolutionForResult(),
                     // and check the result in onActivityResult().
-                    e.startResolutionForResult(this@MapsActivity,
-                            REQUEST_CHECK_SETTINGS)
+                    e.startResolutionForResult(
+                        this@MapsActivity,
+                        REQUEST_CHECK_SETTINGS
+                    )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     // Ignore the error.
                 }
             }
+        }
+    }
+
+    private fun openingTimes(place: Locations): String {
+        val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+        if ((place.openTime == 0) && (place.closeTime == 0)) {
+            return ""
+        } else {
+            val open = currentHour in place.openTime..place.closeTime
+            val opened = if (open) {
+                "Otwarte"
+            } else {
+                "Zamknięte"
+            }
+            return "$opened ${place.openTime} - ${place.closeTime}"
+        }
+    }
+
+    private fun checkIfOpen(place: Locations): BitmapDescriptor{
+        val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+        if ((place.openTime == 0) && (place.closeTime == 0)) {
+            return BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+        } else {
+            val open = currentHour in place.openTime..place.closeTime
+            val opened = if (open) {
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+            } else {
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+            }
+            return opened
         }
     }
 }
