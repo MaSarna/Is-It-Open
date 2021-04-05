@@ -43,7 +43,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
     }
 
 
@@ -68,7 +67,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             .position(geoPosition)
                             .title(place.name)
                             .snippet(openingTimes(place))
-                            .icon(checkIfOpen(place))
+                            .icon(statusOpenedClosed(place))
                     )
                 }
             }
@@ -160,13 +159,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
+    //Checks places for opened/closed
     private fun openingTimes(place: Locations): String {
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
         if ((place.openTime == 0) && (place.closeTime == 0)) {
             return ""
         } else {
-            val open = currentHour in place.openTime..place.closeTime
+            val open = currentHour in place.openTime until place.closeTime
             val opened = if (open) {
                 "Otwarte"
             } else {
@@ -176,13 +176,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-    private fun checkIfOpen(place: Locations): BitmapDescriptor{
+    //Change color of marker if opened/closed
+    private fun statusOpenedClosed(place: Locations): BitmapDescriptor{
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
         if ((place.openTime == 0) && (place.closeTime == 0)) {
             return BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
         } else {
-            val open = currentHour in place.openTime..place.closeTime
+            val open = currentHour in place.openTime until place.closeTime
             val opened = if (open) {
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
             } else {
